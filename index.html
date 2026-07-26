@@ -1,0 +1,487 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KSP Crime Intelligence Hub - Intelligent Conversational AI & Analytics Suite</title>
+    
+    <!-- Fonts & Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Vis.js Network Graph CSS/JS -->
+    <script type="text/javascript" src="https://unpkg.com/vis-network/standalone/umd/vis-network.min.js"></script>
+    
+    <!-- Leaflet GIS Map CSS/JS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <!-- html2pdf.js for PDF export -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+
+    <!-- Header Navbar -->
+    <header class="header-navbar">
+        <div class="brand-container">
+            <div class="brand-logo"><i class="fa-solid fa-shield-halved"></i></div>
+            <div>
+                <div class="brand-title">KSP CRIME INTELLIGENCE HUB</div>
+                <div class="brand-subtitle">State Police Conversational AI & Advanced Analytics Platform</div>
+            </div>
+        </div>
+
+        <div class="header-controls">
+            <!-- Renamed Button to "Voice Chat" -->
+            <button class="live-voice-call-trigger" onclick="openVoiceCallModal()">
+                <i class="fa-solid fa-headset"></i> Voice Chat
+            </button>
+
+            <div class="status-indicator">
+                <div class="pulse-dot"></div>
+                <span>State Database Live (12 Wards)</span>
+            </div>
+
+            <div class="role-badge-selector">
+                <i class="fa-solid fa-user-shield" style="color: var(--primary-blue);"></i>
+                <select id="role-select" onchange="switchRole(this.value)">
+                    <option value="Investigator" selected>Investigator (IO)</option>
+                    <option value="Analyst">Crime Analyst</option>
+                    <option value="Supervisor">Superintendent / SP</option>
+                    <option value="Policymaker">Policymaker / DGP</option>
+                </select>
+            </div>
+        </div>
+    </header>
+
+    <div class="main-wrapper">
+        <!-- Sidebar Navigation -->
+        <nav class="sidebar">
+            <div class="sidebar-category">Intel & Conversational AI</div>
+            <a class="nav-item active" data-tab="chat-view" onclick="showTab('chat-view', this)">
+                <i class="fa-solid fa-comments"></i>
+                <span>AI Chat Assistant</span>
+            </a>
+            <a class="nav-item" data-tab="decision-view" onclick="showTab('decision-view', this)">
+                <i class="fa-solid fa-lightbulb"></i>
+                <span>Investigator Support</span>
+            </a>
+
+            <div class="sidebar-category">Analytics & GIS</div>
+            <a class="nav-item" data-tab="network-view" onclick="showTab('network-view', this)">
+                <i class="fa-solid fa-diagram-project"></i>
+                <span>Criminal Network</span>
+            </a>
+            <a class="nav-item" data-tab="gis-view" onclick="showTab('gis-view', this)">
+                <i class="fa-solid fa-map-location-dot"></i>
+                <span>GIS Hotspots & Maps</span>
+            </a>
+            <a class="nav-item" data-tab="socio-view" onclick="showTab('socio-view', this)">
+                <i class="fa-solid fa-chart-pie"></i>
+                <span>Socio-Demographic</span>
+            </a>
+            <a class="nav-item" data-tab="profiling-view" onclick="showTab('profiling-view', this)">
+                <i class="fa-solid fa-user-ninja"></i>
+                <span>Offender Profiling</span>
+            </a>
+
+            <div class="sidebar-category">Financial & Forecasting</div>
+            <a class="nav-item" data-tab="financial-view" onclick="showTab('financial-view', this)">
+                <i class="fa-solid fa-money-bill-transfer"></i>
+                <span>Financial Crime Trails</span>
+            </a>
+            <a class="nav-item" data-tab="forecasting-view" onclick="showTab('forecasting-view', this)">
+                <i class="fa-solid fa-chart-line"></i>
+                <span>Crime Forecasting</span>
+            </a>
+
+            <div class="sidebar-category">Governance & ML</div>
+            <a class="nav-item" data-tab="xai-view" onclick="showTab('xai-view', this)">
+                <i class="fa-solid fa-brain"></i>
+                <span>ML Model Training & XAI</span>
+            </a>
+            <a class="nav-item" data-tab="rbac-view" onclick="showTab('rbac-view', this)">
+                <i class="fa-solid fa-lock"></i>
+                <span>Governance & Audit</span>
+            </a>
+        </nav>
+
+        <!-- Main Content Area -->
+        <main class="content-area">
+
+            <!-- Top Overview KPI Metrics Bar (Clickable) -->
+            <div class="kpi-row">
+                <div class="kpi-card" onclick="navigateToTab('chat-view')" title="Click to view FIR Search Assistant">
+                    <div class="kpi-icon blue"><i class="fa-solid fa-folder-open"></i></div>
+                    <div>
+                        <div class="kpi-value">12 Active</div>
+                        <div class="kpi-label">FIR Records Cataloged</div>
+                    </div>
+                </div>
+                <div class="kpi-card" onclick="navigateToTab('profiling-view')" title="Click to view Repeat Offender Matrix">
+                    <div class="kpi-icon red"><i class="fa-solid fa-user-ninja"></i></div>
+                    <div>
+                        <div class="kpi-value">7 Suspects</div>
+                        <div class="kpi-label">High-Risk Repeat Offenders</div>
+                    </div>
+                </div>
+                <div class="kpi-card" onclick="navigateToTab('gis-view')" title="Click to open GIS Hotspot Map">
+                    <div class="kpi-icon amber"><i class="fa-solid fa-fire"></i></div>
+                    <div>
+                        <div class="kpi-value">12 Wards</div>
+                        <div class="kpi-label">GIS Hotspot Clusters</div>
+                    </div>
+                </div>
+                <div class="kpi-card" onclick="navigateToTab('financial-view')" title="Click to view Money Laundering Ledger">
+                    <div class="kpi-icon emerald"><i class="fa-solid fa-money-bill-wave"></i></div>
+                    <div>
+                        <div class="kpi-value">₹3.25 Crores</div>
+                        <div class="kpi-label">Flagged Hawala Laundering</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 1. Conversational Chatbot View -->
+            <section id="chat-view" class="view-panel active">
+                <div class="chat-container">
+                    <div class="chat-header">
+                        <div style="display:flex; align-items:center; gap:10px;">
+                            <i class="fa-solid fa-robot" style="color: var(--primary-blue); font-size: 1.3rem;"></i>
+                            <div>
+                                <h3 style="font-size:1.05rem;">Conversational Crime Intelligence Interface</h3>
+                                <div style="font-size:0.75rem; color: var(--text-secondary);">Voice AI & RAG Query Engine (English & Kannada across 12 Wards)</div>
+                            </div>
+                        </div>
+
+                        <div class="chat-controls">
+                            <button id="lang-btn" class="lang-toggle-btn" onclick="toggleLanguage()">
+                                <i class="fa-solid fa-language"></i> Lang: <span id="current-lang-text">English</span>
+                            </button>
+                            <button class="btn-secondary" onclick="exportChatPDF()">
+                                <i class="fa-solid fa-file-pdf"></i> Export PDF
+                            </button>
+                            <button class="btn-secondary" onclick="clearChat()">
+                                <i class="fa-solid fa-trash"></i> Clear
+                            </button>
+                        </div>
+                    </div>
+
+                    <div id="chat-messages" class="chat-messages">
+                        <!-- Welcome message -->
+                        <div class="message-bubble bot">
+                            <strong>KSP Conversational AI:</strong> Hello Officer! I am your KSP Conversational Intelligence Assistant. Trained on 12 Bengaluru wards & 25 state FIRs. Speak to me or click a query below!
+                            <br><br>
+                            <em>Quick Voice AI Dialogue Prompts:</em>
+                            <div style="display:flex; gap:8px; flex-wrap:wrap; margin-top:8px;">
+                                <button class="btn-secondary" style="font-size:0.78rem; border-color:var(--accent-red);" onclick="simulateVoiceInput('Hello officer who are you')"><i class="fa-solid fa-microphone"></i> "Hello Officer"</button>
+                                <button class="btn-secondary" style="font-size:0.78rem; border-color:var(--primary-blue);" onclick="simulateVoiceInput('Tell me current crime reports in Indiranagar')"><i class="fa-solid fa-microphone"></i> "Current Reports"</button>
+                                <button class="btn-secondary" style="font-size:0.78rem; border-color:var(--accent-red);" onclick="simulateVoiceInput('ರಾಜಾಜಿನಗರದ ಅಪರಾಧಗಳು ಮತ್ತು ಕಳವು')"><i class="fa-solid fa-microphone"></i> "ರಾಜಾಜಿನಗರ (Kannada)"</button>
+                                <button class="btn-secondary" style="font-size:0.78rem; border-color:var(--primary-blue);" onclick="simulateVoiceInput('Find high risk suspect Ramesh Blade')"><i class="fa-solid fa-microphone"></i> "Suspect Ramesh"</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="chat-input-bar">
+                        <div class="input-box-container">
+                            <input type="text" id="chat-input" class="chat-input" placeholder="Speak into mic or type (e.g. 'Hello', 'List FIRs in Indiranagar')..." onkeypress="handleKeyPress(event)">
+                            <button id="mic-btn" class="mic-btn" onclick="toggleVoiceInput()" title="Speak into Microphone">
+                                <i class="fa-solid fa-microphone"></i>
+                            </button>
+                        </div>
+                        <button class="send-btn" onclick="sendMessage()">
+                            <i class="fa-solid fa-paper-plane"></i>
+                        </button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 2. Criminal Network Graph View -->
+            <section id="network-view" class="view-panel">
+                <div class="glass-panel">
+                    <div class="panel-header">
+                        <div class="panel-title"><i class="fa-solid fa-diagram-project"></i> Criminal Network & Relationship Graph</div>
+                        <div style="display:flex; gap:8px;">
+                            <button class="btn-secondary" onclick="loadNetworkGraph('all')">All Entities</button>
+                            <button class="btn-secondary" onclick="loadNetworkGraph('accused')">🔴 Accused Only</button>
+                            <button class="btn-secondary" onclick="loadNetworkGraph('gang')">🟣 Gangs</button>
+                            <button class="btn-secondary" onclick="loadNetworkGraph('bank')">🟠 Bank Accounts</button>
+                        </div>
+                    </div>
+
+                    <!-- Explicit Visual Legend Bar explaining shapes & colors -->
+                    <div class="graph-legend-bar">
+                        <div class="legend-title"><i class="fa-solid fa-map"></i> Network Legend & Entity Shapes:</div>
+                        <div class="legend-items">
+                            <div class="legend-item"><span class="legend-shape red-circle">●</span> <strong>Red Circle:</strong> Accused / High-Risk Suspects</div>
+                            <div class="legend-item"><span class="legend-shape purple-triangle">▲</span> <strong>Purple Triangle:</strong> Gangs & Crime Syndicates</div>
+                            <div class="legend-item"><span class="legend-shape amber-diamond">◆</span> <strong>Amber Diamond:</strong> Flagged Shell Bank Accounts</div>
+                            <div class="legend-item"><span class="legend-shape blue-square">■</span> <strong>Blue Square:</strong> FIR Incident Records</div>
+                        </div>
+                    </div>
+
+                    <div id="network-container"></div>
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-top:12px; font-size:0.85rem; color: var(--text-secondary);">
+                        <div><i class="fa-solid fa-circle-info" style="color:var(--accent-red);"></i> <strong>Interactive Tip:</strong> Click any node on the graph to inspect entity details & linked Hawala money trails!</div>
+                        <div id="network-stats" style="font-weight:700; color:var(--primary-blue);">Total Nodes: 14 | Edges: 13</div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 3. GIS Hotspot Map View -->
+            <section id="gis-view" class="view-panel">
+                <div class="glass-panel">
+                    <div class="panel-header">
+                        <div class="panel-title"><i class="fa-solid fa-map-location-dot"></i> GIS Crime Hotspots & Spatial Analytics (12 Wards)</div>
+                        <span class="badge badge-warning">Spatial Intensity Heatmap Active</span>
+                    </div>
+                    <div id="gis-map"></div>
+                </div>
+            </section>
+
+            <!-- 4. Socio-Demographic View -->
+            <section id="socio-view" class="view-panel">
+                <div class="glass-panel">
+                    <div class="panel-header">
+                        <div class="panel-title"><i class="fa-solid fa-chart-pie"></i> Sociological & Demographic Crime Risk Correlations (12 Wards)</div>
+                    </div>
+                    <div class="grid-2">
+                        <div>
+                            <canvas id="socioChart"></canvas>
+                        </div>
+                        <div id="socio-correlations">
+                            <h4 style="margin-bottom:12px; color:var(--primary-blue);">Key Criminological Insights</h4>
+                            <div id="socio-cards-container"></div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 5. Offender Profiling View -->
+            <section id="profiling-view" class="view-panel">
+                <div class="glass-panel">
+                    <div class="panel-header">
+                        <div class="panel-title"><i class="fa-solid fa-user-ninja"></i> Criminology-Based Offender Profiling & Risk Matrix</div>
+                        <input type="text" class="search-input" id="profiling-search" placeholder="Search offender name or alias..." onkeyup="filterProfilingTable()">
+                    </div>
+                    <table class="custom-table">
+                        <thead>
+                            <tr>
+                                <th>Offender ID</th>
+                                <th>Name & Alias</th>
+                                <th>Risk Score</th>
+                                <th>Primary MO</th>
+                                <th>Gang Affiliation</th>
+                                <th>Recidivism Risk</th>
+                            </tr>
+                        </thead>
+                        <tbody id="profiling-table-body"></tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- 6. REDESIGNED RICH INVESTIGATOR SUPPORT VIEW -->
+            <section id="decision-view" class="view-panel">
+                <div class="glass-panel">
+                    <div class="panel-header">
+                        <div class="panel-title"><i class="fa-solid fa-folder-tree"></i> Automated Case Intelligence Dossier & AI Lead Recommendations</div>
+                        <div style="display:flex; align-items:center; gap:10px;">
+                            <label style="font-size:0.85rem; font-weight:700; color:var(--primary-blue);">Select Active Case:</label>
+                            <select id="case-dossier-select" onchange="loadCaseDossier(this.value)" style="padding:8px 14px; border-radius:10px; border:2px solid var(--border-color); font-weight:700; color:var(--text-primary); outline:none; cursor:pointer;">
+                                <option value="FIR-2026-0041" selected>FIR-2026-0041 (Armed Robbery - Indiranagar)</option>
+                                <option value="FIR-2026-0089">FIR-2026-0089 (Cyber Extortion - Whitefield)</option>
+                                <option value="FIR-2026-0130">FIR-2026-0130 (Narcotics Trafficking - Rajajinagar)</option>
+                                <option value="FIR-2026-0180">FIR-2026-0180 (Ponzi Crypto Scam - Marathahalli)</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Selected Case Intelligence Summary Card -->
+                    <div id="dossier-summary-card" class="dossier-summary-card">
+                        <!-- Populated by JS -->
+                    </div>
+
+                    <div class="grid-2" style="margin-top:20px;">
+                        <!-- Interactive Investigation Timeline -->
+                        <div class="dossier-section-card">
+                            <h4 style="color:var(--primary-blue); font-size:1.05rem; margin-bottom:16px; display:flex; align-items:center; justify-content:space-between;">
+                                <span><i class="fa-solid fa-clock-rotate-left" style="color:var(--accent-red);"></i> Investigation Timeline & Evidence Trail</span>
+                                <span class="badge badge-success">4 Milestones Verified</span>
+                            </h4>
+                            <div id="dossier-timeline" class="dossier-timeline">
+                                <!-- Populated by JS -->
+                            </div>
+                        </div>
+
+                        <!-- AI Recommended Leads Matrix -->
+                        <div class="dossier-section-card">
+                            <h4 style="color:var(--accent-amber); font-size:1.05rem; margin-bottom:16px; display:flex; align-items:center; justify-content:space-between;">
+                                <span><i class="fa-solid fa-compass" style="color:var(--accent-amber);"></i> Actionable AI Recommended Leads</span>
+                                <span class="badge badge-danger">3 Critical Actions</span>
+                            </h4>
+                            <div id="dossier-leads" class="dossier-leads-container">
+                                <!-- Populated by JS -->
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Forensics & Tech Evidence Links Card -->
+                    <div class="dossier-section-card" style="margin-top:20px;">
+                        <h4 style="color:var(--primary-blue); font-size:1.05rem; margin-bottom:14px;"><i class="fa-solid fa-dna" style="color:var(--accent-red);"></i> Forensic & Technical Telemetry Matches</h4>
+                        <div id="dossier-forensics" class="grid-3" style="display:grid; grid-template-columns:repeat(3, 1fr); gap:14px;">
+                            <!-- Populated by JS -->
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 7. Financial Crime View -->
+            <section id="financial-view" class="view-panel">
+                <div class="glass-panel">
+                    <div class="panel-header">
+                        <div class="panel-title"><i class="fa-solid fa-money-bill-transfer"></i> Financial Crime & Money Trail Link Analysis</div>
+                        <div style="display:flex; align-items:center; gap:12px;">
+                            <input type="text" class="search-input" id="financial-search" placeholder="Search account or txn ID..." onkeyup="filterFinancialTable()">
+                            <span id="fin-total" class="badge badge-danger">Total Flagged: ₹3,25,00,000</span>
+                        </div>
+                    </div>
+                    <table class="custom-table">
+                        <thead>
+                            <tr>
+                                <th>Txn ID</th>
+                                <th>Source Account</th>
+                                <th>Target Account</th>
+                                <th>Amount</th>
+                                <th>Timestamp</th>
+                                <th>Risk Flag</th>
+                            </tr>
+                        </thead>
+                        <tbody id="financial-table-body"></tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- 8. Crime Forecasting View -->
+            <section id="forecasting-view" class="view-panel">
+                <div class="glass-panel">
+                    <div class="panel-header">
+                        <div class="panel-title"><i class="fa-solid fa-chart-line"></i> Predictive Crime Forecasting & Early Warning System</div>
+                    </div>
+                    <div style="height:350px;">
+                        <canvas id="forecastingChart"></canvas>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 9. Explainable AI & ML Model Training Suite View -->
+            <section id="xai-view" class="view-panel">
+                <div class="glass-panel">
+                    <div class="panel-header">
+                        <div class="panel-title"><i class="fa-solid fa-brain"></i> ML Model Training Suite & Explainable AI (XAI)</div>
+                        <button class="live-voice-call-trigger" style="background:var(--primary-blue);" onclick="triggerMLTraining()">
+                            <i class="fa-solid fa-gears"></i> 🚀 Retrain ML Models Pipeline
+                        </button>
+                    </div>
+
+                    <div id="ml-training-banner" class="xai-box" style="margin-bottom:16px; background:rgba(30, 64, 175, 0.08); border-left:4px solid var(--primary-blue);">
+                        <div style="font-weight:800; font-size:0.95rem; color:var(--primary-blue); margin-bottom:6px;"><i class="fa-solid fa-microchip"></i> Active ML Pipeline Telemetry Metrics:</div>
+                        <div style="display:grid; grid-template-columns:repeat(4, 1fr); gap:12px; font-size:0.85rem; margin-top:8px;">
+                            <div><strong>Recidivism ROC-AUC:</strong> <span style="color:var(--accent-emerald);">0.932</span></div>
+                            <div><strong>Precision Score:</strong> <span style="color:var(--accent-emerald);">94.6%</span></div>
+                            <div><strong>Socio-Demographic R²:</strong> <span style="color:var(--accent-emerald);">0.884</span></div>
+                            <div><strong>Dataset Samples:</strong> 19 Active Records</div>
+                        </div>
+                    </div>
+
+                    <div class="xai-box" style="font-size:0.88rem; line-height:1.6;">
+                        <h4 style="color:var(--primary-blue); margin-bottom:6px;"><i class="fa-solid fa-check-double"></i> Transparent Reasoning Path Architecture</h4>
+                        All responses generated by the KSP Conversational Intelligence Platform undergo rigorous RAG grounding:
+                        <ul style="margin-top:8px;">
+                            <li>1. Primary FIR Data Verification across 12 Bengaluru Police Wards</li>
+                            <li>2. Gradient Boosting Recidivism Weighting (Convictions 42%, Gang Ties 28%)</li>
+                            <li>3. Spatio-Temporal Cluster Validation (GIS Coordinate Alignment)</li>
+                        </ul>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 10. Governance & Audit View -->
+            <section id="rbac-view" class="view-panel">
+                <div class="glass-panel">
+                    <div class="panel-header">
+                        <div class="panel-title"><i class="fa-solid fa-lock"></i> Security, Role-Based Access Control & Audit Log</div>
+                    </div>
+                    <h4 style="margin-bottom:10px; color:var(--text-secondary);">Real-Time System Audit Log</h4>
+                    <table class="custom-table">
+                        <thead>
+                            <tr>
+                                <th>Timestamp</th>
+                                <th>User</th>
+                                <th>Role</th>
+                                <th>Action Performed</th>
+                            </tr>
+                        </thead>
+                        <tbody id="audit-table-body"></tbody>
+                    </table>
+                </div>
+            </section>
+
+        </main>
+    </div>
+
+    <!-- FULLSCREEN / MODAL VOICE CHAT OVERLAY WITH BACK BUTTON -->
+    <div id="voice-overlay" class="voice-call-overlay">
+        <!-- Top Back Button inside Voice Chat Modal -->
+        <button class="voice-back-btn" onclick="closeVoiceCallModal()">
+            <i class="fa-solid fa-arrow-left"></i> Return to Dashboard
+        </button>
+
+        <!-- Tap Sphere to Listen or Test Audio -->
+        <div class="voice-sphere-container" onclick="startListeningVoice()" title="Tap to Speak into Microphone">
+            <div class="voice-sphere">
+                <i class="fa-solid fa-microphone"></i>
+            </div>
+        </div>
+        <div class="voice-call-title">Voice Chat Assistant</div>
+        <div id="overlay-voice-status" class="voice-call-status">🎙️ Listening to Officer's Voice... Speak now!</div>
+        <div id="overlay-voice-transcript" class="voice-call-transcript">Speak clearly into your microphone (e.g. "Hello Officer", "Tell me current reports")</div>
+
+        <!-- Audio Test Action -->
+        <div style="margin-bottom:18px;">
+            <button class="overlay-prompt-btn" style="background:var(--primary-blue);" onclick="testAIVoiceOutput()">
+                <i class="fa-solid fa-volume-high"></i> 🔊 Test AI Voice Output Out Loud
+            </button>
+        </div>
+
+        <!-- Quick Interactive Voice Prompt Buttons inside Modal -->
+        <div style="display:flex; gap:10px; flex-wrap:wrap; justify-content:center; max-width:600px; margin-bottom:24px;">
+            <button class="overlay-prompt-btn" onclick="triggerVoiceQuery('Hello officer, who are you')">🎤 "Hello Officer"</button>
+            <button class="overlay-prompt-btn" onclick="triggerVoiceQuery('Tell me current crime reports in Indiranagar')">🎤 "Indiranagar Reports"</button>
+            <button class="overlay-prompt-btn" onclick="triggerVoiceQuery('ರಾಜಾಜಿನಗರದ ಅಪರಾಧಗಳು ಮತ್ತು ಕಳವು')">🎤 "ರಾಜಾಜಿನಗರ (Kannada)"</button>
+            <button class="overlay-prompt-btn" onclick="triggerVoiceQuery('Find high risk suspect Ramesh Blade')">🎤 "Suspect Ramesh"</button>
+        </div>
+
+        <button class="voice-call-close-btn" onclick="closeVoiceCallModal()">
+            <i class="fa-solid fa-phone-slash"></i> End Voice Chat
+        </button>
+    </div>
+
+    <!-- ENTITY DEEP-DIVE INSPECTOR MODAL (FOR GRAPH NODES) -->
+    <div id="entity-modal" class="voice-call-overlay" style="background: rgba(15, 23, 42, 0.85);">
+        <div class="glass-panel" style="max-width: 550px; width: 90%; background: #ffffff; color: var(--text-primary); border-radius: 18px; box-shadow: var(--shadow-lg);">
+            <div class="panel-header" style="border-bottom: 2px solid var(--border-color);">
+                <div id="entity-modal-title" class="panel-title" style="font-size: 1.25rem;">Entity Inspector</div>
+                <button class="btn-secondary" onclick="closeEntityModal()"><i class="fa-solid fa-xmark"></i> Close</button>
+            </div>
+            <div id="entity-modal-body" style="font-size: 0.92rem; line-height: 1.6; color: var(--text-primary); margin-top: 14px;"></div>
+        </div>
+    </div>
+
+    <!-- Frontend Application JS -->
+    <script src="{{ url_for('static', filename='js/app.js') }}"></script>
+</body>
+</html>
